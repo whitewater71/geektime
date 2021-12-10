@@ -1,0 +1,139 @@
+云原生训练营模块 3 作业
+
+
+
+编写 Dockerfile:
+
+vagrant@node0130:~/golang/src/httpserver$ vi Dockerfile
+
+FROM ubuntu
+
+ENV VERSION=1
+
+ENV MY_SERVICE_PORT=80
+
+LABEL multi.label1="value1"
+
+COPY ./httpserver /httpserver
+
+EXPOSE 80
+
+EntryPoint ["/httpserver"]
+
+
+
+构建 Docker Httpserver 镜像:
+
+vagrant@node0130:~/golang/src/httpserver$ docker build -t whitewatermy/go_httpserver:v1.0 .
+
+Sending build context to Docker daemon  9.913MB
+
+Step 1/7 : FROM ubuntu
+
+ ---> ba6acccedd29
+
+Step 2/7 : ENV VERSION=1
+
+ ---> Using cache
+
+ ---> 83ec43e192b1
+
+Step 3/7 : ENV MY_SERVICE_PORT=80
+
+ ---> Using cache
+
+ ---> 958952e8eb5d
+
+Step 4/7 : LABEL multi.label1="value1"
+
+ ---> Using cache
+
+ ---> d31fd00923a2
+
+Step 5/7 : COPY ./httpserver /httpserver
+
+ ---> Using cache
+
+ ---> 6e766355060a
+
+Step 6/7 : EXPOSE 80
+
+ ---> Using cache
+
+ ---> 39eaf08bcac2
+
+Step 7/7 : EntryPoint ["/httpserver"]
+
+ ---> Using cache
+
+ ---> 4d059322e395
+
+Successfully built 4d059322e395
+
+Successfully tagged whitewatermy/go_httpserver:v1.0
+
+
+
+推送到 Docker Hub 镜像仓库:
+
+vagrant@node0130:~/golang/src/httpserver$ docker push whitewatermy/go_httpserver:v1.0
+
+The push refers to repository [docker.io/whitewatermy/go_httpserver]
+
+47222c316e5b: Pushed
+
+9f54eef41275: Mounted from library/ubuntu
+
+v1.0: digest: sha256:d13ba552974e8d27f6b2fd90189bbf85628e559ca4cf947909bdf935712052a0 size: 740
+
+
+
+启动 Httpserver:
+
+vagrant@node0130:~/golang/src/httpserver$ docker run -d whitewatermy/go_httpserver:v1.0
+
+9ebaf4c36feb3bae357a25e87522b3da5b6546bff1aa90fbaf5ca661cf7f5533
+
+vagrant@node0130:~/golang/src/httpserver$ docker ps
+
+CONTAINER ID   IMAGE                             COMMAND         CREATED          STATUS         PORTS     NAMES
+
+9ebaf4c36feb   whitewatermy/go_httpserver:v1.0   "/httpserver"   10 seconds ago   Up 7 seconds   80/tcp    optimistic_elbakyan
+
+vagrant@node0130:~/golang/src/httpserver$
+
+
+
+查看 IP：
+
+vagrant@node0130:~/golang/src/httpserver$ docker inspect 9ebaf4c36feb | grep -i pid
+
+            "Pid": 3595,
+
+            "PidMode": "",
+
+            "PidsLimit": null,
+
+vagrant@node0130:~/golang/src/httpserver$ nsenter -t 3595 -n ip addr
+
+nsenter: cannot open /proc/3595/ns/net: Permission denied
+
+vagrant@node0130:~/golang/src/httpserver$ sudo nsenter -t 3595 -n ip addr
+
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+
+    inet 127.0.0.1/8 scope host lo
+
+       valid_lft forever preferred_lft forever
+
+5: eth0@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+
+       valid_lft forever preferred_lft forever
+
+vagrant@node0130:~/golang/src/httpserver$
